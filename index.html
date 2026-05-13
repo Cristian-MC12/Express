@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Tasks — Servicios a un toque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #1E9FE8;
+      --blue-dark: #1480C0;
+      --blue-light: #E8F5FD;
+      --orange: #F47920;
+      --orange-dark: #D4641A;
+      --dark: #0F1B2D;
+      --gray: #64748B;
+      --light: #F8FAFC;
+      --white: #FFFFFF;
+      --radius: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--white);
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(30,159,232,0.1);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .nav-logo-text { font-size: 20px; font-weight: 700; color: var(--dark); }
+    .nav-logo-text span { color: var(--blue); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--gray); font-weight: 500; font-size: 15px; transition: color .2s; }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; border: none; padding: 10px 24px;
+      border-radius: 50px; font-family: 'Poppins', sans-serif;
+      font-weight: 600; font-size: 14px; cursor: pointer;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 15px rgba(30,159,232,0.35);
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(30,159,232,0.45); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #0F1B2D 0%, #1a2f4a 50%, #0d2137 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 120px 48px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; right: -200px;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(30,159,232,0.15) 0%, transparent 70%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -150px; left: -150px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(244,121,32,0.1) 0%, transparent 70%);
+    }
+    .hero-content {
+      max-width: 1200px; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center; position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(30,159,232,0.15); border: 1px solid rgba(30,159,232,0.3);
+      color: var(--blue); padding: 6px 16px; border-radius: 50px;
+      font-size: 13px; font-weight: 600; margin-bottom: 24px;
+    }
+    .hero-badge::before { content: '⚡'; }
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 60px); font-weight: 800;
+      color: white; line-height: 1.1; margin-bottom: 24px;
+    }
+    .hero h1 span { color: var(--blue); }
+    .hero h1 em { color: var(--orange); font-style: normal; }
+    .hero-desc {
+      font-size: 18px; color: rgba(255,255,255,0.65);
+      line-height: 1.7; margin-bottom: 40px; font-weight: 300;
+    }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; padding: 16px 32px; border-radius: 50px;
+      font-weight: 700; font-size: 16px; text-decoration: none;
+      box-shadow: 0 8px 30px rgba(30,159,232,0.4);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(30,159,232,0.5); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      color: white; padding: 16px 32px; border-radius: 50px;
+      font-weight: 600; font-size: 16px; text-decoration: none;
+      transition: background .2s, border-color .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 48px;
+      padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 800; color: white; }
+    .stat-num span { color: var(--blue); }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 500; margin-top: 2px; }
+
+    /* Phone mockup */
+    .hero-phone {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .phone-wrap {
+      position: relative;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    .phone-outer {
+      width: 260px; height: 520px;
+      background: linear-gradient(145deg, #1a2a3a, #0d1a28);
+      border-radius: 44px;
+      border: 2px solid rgba(30,159,232,0.3);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; overflow: hidden;
+      position: relative;
+    }
+    .phone-notch {
+      width: 80px; height: 24px;
+      background: #0d1a28; border-radius: 0 0 16px 16px;
+      margin: 0 auto; position: relative; z-index: 2;
+    }
+    .phone-screen {
+      flex: 1; background: linear-gradient(180deg, #1E9FE8 0%, #1480C0 30%, #f8fafc 30%);
+      display: flex; flex-direction: column; padding: 16px;
+      position: relative; overflow: hidden;
+    }
+    .phone-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .phone-header-title { color: white; font-weight: 700; font-size: 14px; }
+    .phone-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .phone-map {
+      height: 140px; background: #e8f4f8; border-radius: 16px;
+      margin-bottom: 12px; overflow: hidden; position: relative;
+    }
+    .phone-map-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(30,159,232,0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(30,159,232,0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .phone-map-pin {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 32px; height: 32px; background: var(--blue); border-radius: 50% 50% 50% 0;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      box-shadow: 0 4px 12px rgba(30,159,232,0.5);
+    }
+    .phone-map-pin::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px; height: 12px; background: white; border-radius: 50%;
+    }
+    .phone-card {
+      background: white; border-radius: 16px; padding: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 8px;
+    }
+    .phone-card-title { font-size: 11px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .phone-card-row { display: flex; justify-content: space-between; align-items: center; }
+    .phone-card-cat {
+      font-size: 9px; background: var(--blue-light); color: var(--blue);
+      padding: 2px 8px; border-radius: 50px; font-weight: 600;
+    }
+    .phone-card-price { font-size: 13px; font-weight: 800; color: var(--orange); }
+    .phone-bottom-nav {
+      display: flex; justify-content: space-around; align-items: center;
+      background: white; padding: 10px 0; border-top: 1px solid #f0f0f0;
+    }
+    .phone-nav-item { font-size: 18px; opacity: 0.4; }
+    .phone-nav-item.active { opacity: 1; }
+    .phone-glow {
+      position: absolute; top: -100px; right: -100px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(30,159,232,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── SECTIONS COMMON ── */
+    section { padding: 100px 48px; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: var(--blue-light); color: var(--blue);
+      padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+      color: var(--dark); line-height: 1.2; margin-bottom: 16px;
+    }
+    .section-title span { color: var(--blue); }
+    .section-sub { font-size: 18px; color: var(--gray); max-width: 560px; line-height: 1.7; }
+
+    /* ── FEATURES ── */
+    .features { background: var(--light); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-top: 60px;
+    }
+    .feature-card {
+      background: white; border-radius: var(--radius); padding: 32px;
+      border: 1px solid rgba(30,159,232,0.08);
+      box-shadow: 0 4px 24px rgba(30,159,232,0.06);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(30,159,232,0.12); }
+    .feature-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin-bottom: 20px;
+    }
+    .feature-icon.blue { background: var(--blue-light); }
+    .feature-icon.orange { background: #FFF0E6; }
+    .feature-icon.green { background: #E6F9F0; }
+    .feature-title { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 10px; }
+    .feature-desc { font-size: 14px; color: var(--gray); line-height: 1.7; }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: white; }
+    .how-tabs {
+      display: flex; gap: 8px; margin: 48px 0 56px;
+      background: var(--light); padding: 6px; border-radius: 50px;
+      width: fit-content;
+    }
+    .how-tab {
+      padding: 10px 28px; border-radius: 50px; border: none;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px;
+      cursor: pointer; transition: all .2s; color: var(--gray); background: transparent;
+    }
+    .how-tab.active { background: var(--blue); color: white; box-shadow: 0 4px 15px rgba(30,159,232,0.35); }
+    .how-steps { display: none; }
+    .how-steps.active { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .step-card {
+      text-align: center; padding: 32px 20px;
+      background: var(--light); border-radius: var(--radius);
+      position: relative;
+    }
+    .step-card::after {
+      content: '→';
+      position: absolute; right: -16px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px; color: var(--blue); font-weight: 700;
+    }
+    .step-card:last-child::after { display: none; }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; font-weight: 800; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step-icon { font-size: 32px; margin-bottom: 12px; }
+    .step-title { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+    /* ── CATEGORIES ── */
+    .categories { background: var(--light); }
+    .cats-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 16px; margin-top: 56px;
+    }
+    .cat-card {
+      background: white; border-radius: var(--radius); padding: 28px 16px;
+      text-align: center; border: 2px solid transparent;
+      transition: all .3s; cursor: default;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .cat-card:hover { border-color: var(--blue); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(30,159,232,0.12); }
+    .cat-emoji { font-size: 36px; margin-bottom: 12px; }
+    .cat-name { font-size: 13px; font-weight: 600; color: var(--dark); }
+
+    /* ── DOWNLOAD ── */
+    .download {
+      background: linear-gradient(135deg, #0F1B2D 0%, #1a2f4a 100%);
+      position: relative; overflow: hidden;
+    }
+    .download::before {
+      content: '';
+      position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(30,159,232,0.12) 0%, transparent 70%);
+    }
+    .download-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center; position: relative; z-index: 1;
+    }
+    .download h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: white; margin-bottom: 16px; }
+    .download h2 span { color: var(--blue); }
+    .download-desc { font-size: 17px; color: rgba(255,255,255,0.6); line-height: 1.7; margin-bottom: 40px; }
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; padding: 18px 36px; border-radius: 50px;
+      font-weight: 700; font-size: 17px; text-decoration: none;
+      box-shadow: 0 8px 30px rgba(30,159,232,0.4);
+      transition: transform .2s, box-shadow .2s; margin-bottom: 16px;
+      display: flex; width: fit-content;
+    }
+    .download-btn:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(30,159,232,0.5); }
+    .download-btn-icon { font-size: 24px; }
+    .download-note { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 12px; }
+    .download-note span { color: rgba(255,255,255,0.7); }
+
+    /* QR */
+    .qr-box {
+      background: white; border-radius: 28px; padding: 36px;
+      text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 320px; margin: 0 auto;
+    }
+    .qr-title { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+    .qr-sub { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+    #qrcode { display: flex; justify-content: center; margin-bottom: 20px; }
+    #qrcode canvas, #qrcode img { border-radius: 12px; }
+    .qr-steps { text-align: left; }
+    .qr-step {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--gray); margin-bottom: 8px;
+    }
+    .qr-step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--blue-light); color: var(--blue);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── RATINGS ── */
+    .ratings { background: white; }
+    .ratings-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-top: 56px;
+    }
+    .rating-card {
+      background: var(--light); border-radius: var(--radius); padding: 28px;
+      border: 1px solid rgba(30,159,232,0.06);
+    }
+    .stars { color: #F59E0B; font-size: 18px; margin-bottom: 16px; }
+    .rating-text { font-size: 15px; color: var(--dark); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .rating-author { display: flex; align-items: center; gap: 12px; }
+    .rating-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; font-weight: 700;
+    }
+    .rating-name { font-weight: 700; font-size: 14px; color: var(--dark); }
+    .rating-role { font-size: 12px; color: var(--gray); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark); color: rgba(255,255,255,0.6);
+      padding: 60px 48px 32px;
+    }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-top {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      gap: 60px; margin-bottom: 48px;
+    }
+    .footer-brand-name { font-size: 22px; font-weight: 800; color: white; margin-bottom: 12px; }
+    .footer-brand-name span { color: var(--blue); }
+    .footer-brand-desc { font-size: 14px; line-height: 1.7; max-width: 300px; }
+    .footer-col-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul li a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 14px; transition: color .2s; }
+    .footer-col ul li a:hover { color: var(--blue); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 24px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-copy { font-size: 13px; }
+    .footer-copy span { color: var(--blue); }
+    .footer-team { font-size: 13px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 14px 24px; }
+      .nav-links { display: none; }
+      section { padding: 70px 24px; }
+      .hero { padding: 100px 24px 60px; }
+      .hero-content { grid-template-columns: 1fr; gap: 48px; text-align: center; }
+      .hero-buttons { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-phone { order: -1; }
+      .features-grid { grid-template-columns: 1fr; }
+      .how-steps.active { grid-template-columns: 1fr 1fr; }
+      .cats-grid { grid-template-columns: repeat(3, 1fr); }
+      .download-inner { grid-template-columns: 1fr; text-align: center; }
+      .download-btn { margin: 0 auto 16px; }
+      .ratings-grid { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr; gap: 32px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .how-steps.active { grid-template-columns: 1fr; }
+      .cats-grid { grid-template-columns: repeat(2, 1fr); }
+      .step-card::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">⚡</div>
+    <span class="nav-logo-text">Express<span>Tasks</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Características</a></li>
+    <li><a href="#how">Cómo funciona</a></li>
+    <li><a href="#categories">Servicios</a></li>
+    <li><a href="#download">Descargar</a></li>
+  </ul>
+  <a href="#download" class="nav-cta">Descargar App</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge">Disponible para Android</div>
+      <h1>Servicios a un<br/><span>toque</span> de distancia<br/>con <em>Express Tasks</em></h1>
+      <p class="hero-desc">
+        Conectamos personas que necesitan ayuda con Taskers listos para actuar. Mandados, trámites, entregas y más — rápido, seguro y confiable.
+      </p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn-primary">
+          <span>📲</span> Descargar APK
+        </a>
+        <a href="#how" class="btn-secondary">
+          <span>▶</span> Cómo funciona
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num">6<span>+</span></div>
+          <div class="stat-label">Categorías</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">2<span>x</span></div>
+          <div class="stat-label">Roles de usuario</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">⭐<span>5</span></div>
+          <div class="stat-label">Sistema de reputación</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-phone">
+      <div class="phone-glow"></div>
+      <div class="phone-wrap">
+        <div class="phone-outer">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-header">
+              <span class="phone-header-title">⚡ Express Tasks</span>
+              <div class="phone-avatar">👤</div>
+            </div>
+            <div class="phone-map">
+              <div class="phone-map-grid"></div>
+              <div class="phone-map-pin"></div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-title">🛒 Mandado al supermercado</div>
+              <div class="phone-card-row">
+                <span class="phone-card-cat">Mandado</span>
+                <span class="phone-card-price">$15.000</span>
+              </div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-title">📋 Trámite en notaría</div>
+              <div class="phone-card-row">
+                <span class="phone-card-cat">Trámite</span>
+                <span class="phone-card-price">$25.000</span>
+              </div>
+            </div>
+          </div>
+          <div class="phone-bottom-nav">
+            
+            <div class="phone-nav-item active">🗺️</div>
+            <div class="phone-nav-item">📋</div>
+            <div class="phone-nav-item">🔔</div>
+            <div class="phone-nav-item">👤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <div class="section-tag">¿Por qué Express Tasks?</div>
+    <h2 class="section-title">Todo lo que necesitas,<br/><span>en una sola app</span></h2>
+    <p class="section-sub">Diseñada para conectar clientes y Taskers de forma rápida, segura y transparente.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon blue">📍</div>
+        <div class="feature-title">Servicios con ubicación</div>
+        <div class="feature-desc">Publica tu tarea con dirección exacta usando GPS o búsqueda en el mapa. El Tasker sabe exactamente dónde ir.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">⚡</div>
+        <div class="feature-title">Ofertas en tiempo real</div>
+        <div class="feature-desc">Recibe ofertas de Taskers disponibles al instante. Compara precios y elige el que más te convenga.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">⭐</div>
+        <div class="feature-title">Sistema de reputación</div>
+        <div class="feature-desc">Califica y sé calificado. Un sistema de 5 estrellas garantiza calidad y confianza en cada servicio.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue">🛡️</div>
+        <div class="feature-title">Taskers verificados</div>
+        <div class="feature-desc">Cada Tasker pasa por un proceso de validación de documentos antes de poder operar en la plataforma.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">💬</div>
+        <div class="feature-title">Comunicación directa</div>
+        <div class="feature-desc">Coordina los detalles con tu Tasker directamente desde la app. Sin intermediarios, sin complicaciones.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">📊</div>
+        <div class="feature-title">Panel de desempeño</div>
+        <div class="feature-desc">Los Taskers tienen acceso a estadísticas de sus servicios, cartera y métricas de rendimiento.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-inner">
+    <div class="section-tag">Proceso simple</div>
+    <h2 class="section-title">¿Cómo <span>funciona</span>?</h2>
+    <p class="section-sub">Tanto si necesitas ayuda como si quieres ganar dinero, el proceso es sencillo.</p>
+    <div class="how-tabs">
+      <button class="how-tab active" onclick="switchTab('client', this)">Soy Cliente</button>
+      <button class="how-tab" onclick="switchTab('tasker', this)">Soy Tasker</button>
+    </div>
+    <div class="how-steps active" id="steps-client">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">📝</div>
+        <div class="step-title">Publica tu tarea</div>
+        <div class="step-desc">Describe lo que necesitas, pon el precio y la ubicación.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">📨</div>
+        <div class="step-title">Recibe ofertas</div>
+        <div class="step-desc">Taskers cercanos te envían sus propuestas en tiempo real.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">✅</div>
+        <div class="step-title">Acepta la mejor</div>
+        <div class="step-desc">Elige al Tasker que más te convenga y coordina los detalles.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-icon">⭐</div>
+        <div class="step-title">Califica el servicio</div>
+        <div class="step-desc">Al finalizar, confirma el pago y deja tu calificación.</div>
+      </div>
+    </div>
+    <div class="how-steps" id="steps-tasker">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">📋</div>
+        <div class="step-title">Regístrate como Tasker</div>
+        <div class="step-desc">Sube tus documentos y espera la aprobación del administrador.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">🗺️</div>
+        <div class="step-title">Explora tareas</div>
+        <div class="step-desc">Ve las tareas disponibles en el mapa o en lista y elige las que te interesen.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon">💰</div>
+        <div class="step-title">Envía tu oferta</div>
+        <div class="step-desc">Propón tu precio y espera a que el cliente te acepte.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-icon">🏆</div>
+        <div class="step-title">Completa y cobra</div>
+        <div class="step-desc">Realiza el servicio, confirma la entrega y acumula reputación.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories" id="categories">
+  <div class="section-inner">
+    <div class="section-tag">Servicios disponibles</div>
+    <h2 class="section-title">¿Qué puedes <span>pedir</span>?</h2>
+    <p class="section-sub">Desde un mandado rápido hasta trámites complejos &mdash; tenemos una categoría para cada necesidad.</p>
+    <div class="cats-grid">
+      <div class="cat-card"><div class="cat-emoji">🛒</div><div class="cat-name">Mandados</div></div>
+      <div class="cat-card"><div class="cat-emoji">🧍</div><div class="cat-name">Hacer fila</div></div>
+      <div class="cat-card"><div class="cat-emoji">📋</div><div class="cat-name">Trámites</div></div>
+      <div class="cat-card"><div class="cat-emoji">📦</div><div class="cat-name">Entregas</div></div>
+      <div class="cat-card"><div class="cat-emoji">🛍️</div><div class="cat-name">Compras</div></div>
+      <div class="cat-card"><div class="cat-emoji">✨</div><div class="cat-name">Otro</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section class="download" id="download">
+  <div class="download-inner">
+    <div>
+      <div class="section-tag" style="background:rgba(30,159,232,0.15);color:#1E9FE8;">Disponible ahora</div>
+      <h2>Descarga <span>Express Tasks</span><br/>gratis para Android</h2>
+      <p class="download-desc">Instala la app directamente en tu dispositivo Android. Sin tiendas, sin esperas &mdash; solo descarga e instala el APK.</p>
+      <a href="ExpressTasks.apk" class="download-btn" download>
+        <span class="download-btn-icon">🤖</span>
+        <div>
+          <div style="font-size:12px;font-weight:400;opacity:0.8;">Descargar para</div>
+          <div>Android APK</div>
+        </div>
+      </a>
+      <p class="download-note">⚠️ Activa <span>"Instalar apps de fuentes desconocidas"</span> en Ajustes &rarr; Seguridad antes de instalar.</p>
+    </div>
+    <div class="qr-box">
+      <div class="qr-title">📱 Escanea y descarga</div>
+      <div class="qr-sub">Apunta la cámara de tu celular</div>
+      <div id="qrcode"></div>
+      <div class="qr-steps">
+        <div class="qr-step"><div class="qr-step-num">1</div>Abre la cámara de tu Android</div>
+        <div class="qr-step"><div class="qr-step-num">2</div>Apunta al código QR</div>
+        <div class="qr-step"><div class="qr-step-num">3</div>Toca la notificación que aparece</div>
+        <div class="qr-step"><div class="qr-step-num">4</div>Instala el APK y listo ✅</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="ratings" id="reviews">
+  <div class="section-inner">
+    <div class="section-tag">Testimonios</div>
+    <h2 class="section-title">Lo que dicen nuestros <span>usuarios</span></h2>
+    <p class="section-sub">Experiencias reales de clientes y Taskers que ya usan la plataforma.</p>
+    <div class="ratings-grid">
+      <div class="rating-card">
+        <div class="stars">★★★★★</div>
+        <p class="rating-text">"Necesitaba hacer una fila en el banco y no tenía tiempo. En 10 minutos ya tenía un Tasker listo. Increíble servicio."</p>
+        <div class="rating-author">
+          <div class="rating-avatar">A</div>
+          <div><div class="rating-name">Andrés M.</div><div class="rating-role">Cliente &mdash; Pasto, Nariño</div></div>
+        </div>
+      </div>
+      <div class="rating-card">
+        <div class="stars">★★★★★</div>
+        <p class="rating-text">"Como Tasker puedo generar ingresos extra en mis tiempos libres. La app es muy fácil de usar y los pagos son seguros."</p>
+        <div class="rating-author">
+          <div class="rating-avatar">L</div>
+          <div><div class="rating-name">Laura P.</div><div class="rating-role">Tasker verificada</div></div>
+        </div>
+      </div>
+      <div class="rating-card">
+        <div class="stars">★★★★★</div>
+        <p class="rating-text">"El proceso de verificación me da confianza. Sé que los Taskers están validados y puedo calificarlos después."</p>
+        <div class="rating-author">
+          <div class="rating-avatar">C</div>
+          <div><div class="rating-name">Carolina R.</div><div class="rating-role">Cliente frecuente</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">⚡ Express<span>Tasks</span></div>
+        <p class="footer-brand-desc">Plataforma de servicios bajo demanda que conecta clientes con Taskers verificados. Rápido, seguro y confiable.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Navegación</div>
+        <ul>
+          <li><a href="#features">Características</a></li>
+          <li><a href="#how">Cómo funciona</a></li>
+          <li><a href="#categories">Servicios</a></li>
+          <li><a href="#download">Descargar</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Proyecto</div>
+        <ul>
+          <li><a href="#">Metodología XP</a></li>
+          <li><a href="#">Sprint 4</a></li>
+          <li><a href="#">Documentación</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">&copy; 2026 <span>Express Tasks</span>. Todos los derechos reservados.</div>
+      <div class="footer-team">Desarrollado por <span style="color:#1E9FE8;">Cristian Martínez &amp; Natalie Benavides</span></div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  new QRCode(document.getElementById('qrcode'), {
+    text: window.location.href.replace('index.html','') + 'ExpressTasks.apk',
+    width: 200, height: 200,
+    colorDark: '#0F1B2D', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  function switchTab(role, btn) {
+    document.querySelectorAll('.how-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.how-steps').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('steps-' + role).classList.add('active');
+  }
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.getAttribute('id'); });
+    navLinks.forEach(a => { a.style.color = a.getAttribute('href') === '#' + current ? '#1E9FE8' : ''; });
+  });
+</script>
+</body>
+</html>
